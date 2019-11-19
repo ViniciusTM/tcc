@@ -7,7 +7,7 @@ class Model:
         self.dat = data
         self.ampl = AMPL()        
         self.ampl.setOption('solver', 'cplex')
-        self.ampl.setOption('cplex_options', 'timelimit={:d} return_mipgap=1 bestbound'.format(time_limit))
+        self.ampl.setOption('cplex_options', 'timelimit={:d} return_mipgap=1 bestbound memoryemphasis=1'.format(time_limit))
         self.relax = relax
         if relax:
             self.ampl.setOption('relax_integrality', 1)
@@ -36,9 +36,9 @@ class Model:
         self.ampl.solve()
 
         self.elapsedTime = time.time() - start
-        print(self.ampl.obj['COST'].result())
-        # self.lb = self.ampl.obj['COST'].ub()
-       # self.gap = self.ampl.getData('COST.relmipgap').toList()[0]
+        self.ub = self.ampl.obj['COST'].value()
+        self.lb = self.ampl.getData('COST.bestbound').toList()[0]
+        self.gap = self.ampl.getData('COST.relmipgap').toList()[0]
 
     def write_result(self, file):
         file.write(str(self.dat.g)+','+str(self.dat.n)+','+str(self.dat.m)+','+str(self.dat.i)+','+str(self.elapsedTime)+','+str(self.ub))

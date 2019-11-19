@@ -8,7 +8,7 @@ param w {J2};
 
 var y {i in J, j in J: i != j} binary;
 
-minimize COST: sum{(i,j) in A} p[i]*w[j]*y[i,j];
+minimize COST: sum{i in J1, j in J2} p[i]*w[j]*y[i,j];
 
 s.t. r1 {(i,j) in A}: y[i,j] = 1;
 s.t. r2 {i in J, j in J: i != j}: y[i,j] + y[j,i] = 1;

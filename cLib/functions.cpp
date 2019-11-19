@@ -45,8 +45,77 @@ void schedule_orders(Solution &sol, Instance* dat) {
     }
 }
 
+void solve_subproblem (Instance* dat, std::vector<double>& lambda, Solution& sol) {
+    sol.lb = 0;
+
+    // Calculating horizon end
+    int endTime = 0;
+    for (int j=0; j<dat->n; j++) {
+        endTime += dat->jobs[j].p;
+    }
+
+    // Calculating lambda sum
+    std::vector<double> sumLambdaJob(dat->n, 0);
+    std::vector<double> sumLambdaOrd(dat->m, 0);
+
+    for (int k=0; k<dat->edges.size(); k++) {
+        int i = dat->edges[k].i;
+        int j = dat->edges[k].j;
+
+        sumLambdaJob[j] += lambda[k];
+        sumLambdaOrd[i] += lambda[k];
+    }
+
+
+    // copying sumPred
+    std::vector<int> sumPred(dat->m);
+    for(Order ord : dat->orders) {
+        sumPred[ord.id] = ord.sumPred;
+    }
+
+
+    // Solving orders subproblem
+    int t = 0;
+    for (int i=0; i<dat->m; i++) {
+        double weight = dat->orders[i].w - sumLambdaOrd[i];
+
+        if (weight > 0) {
+        sol.ordConc[i] = t + sumPred[i];
+        }
+        else {
+        sol.ordConc[i] = endTime;
+        }
+
+        sol.lb += sol.ordConc[i] * weight;
+    }
+
+    // Solving jobs subproblem
+    std::vector<double> priority;
+    std::vector<int> idx;
+
+    for (int j=0; j<dat->n; j++) {
+        priority.push_back(dat->jobs[j].p / sumLambdaJob[j]);
+        idx.push_back(j);
+    }
+
+    std::vector<int> sorted(idx.size());
+    std::iota(sorted.begin(), sorted.end(), 0);
+    std::sort(sorted.begin(), sorted.end(), [&](int a, int b){return priority[a] < priority[b]; });
+
+    t = 0;
+    for (int count=0; count<idx.size(); count++) {
+        int j = idx[sorted[count]];
+
+        sol.jobSeq.push_back(j);
+        t += dat->jobs[j].p;
+        sol.jobConc[j] = t;
+        sol.lb += t * sumLambdaJob[j];
+    }
+}
+
 
 // ------------------------ heuristics ------------------------ //
+
 Solution smith_naive (Instance* dat) {
 	Solution sol(dat);
 
@@ -302,104 +371,62 @@ Solution assemble_heuristic (Instance* dat) {
     return sol;    
 }
 
+// ------------------------ lagragian ------------------------ //
+double lagrangean_relax(Instance* dat) {
+    // Initializing sub-grad params
+    double pi = 2;
+    double minPi = 0.01;
+    int maxIt = 10;
+    int it = 0;
 
-// // ------------------------ lagragian ------------------------ //
-// Solution solve_subproblem (Node* node, Instance* dat) {
-//   Solution sol(dat);
-//   sol.lb = 0;
+    // Initializing lagragean multipliers
+    std::vector<double> lambda(dat->edges.size(), 0);
 
-//   // Calculating horizon end
-//   int endTime = 0;
-//   for (int j=0; j<dat->n; j++) {
-//     endTime += dat->jobs[j].p;
-//   }
+    // Initiazling subgradients
+    std::vector<double> subGrad(dat->edges.size(), 0);
 
-//   // Calculating lambda sum
-//   std::vector<double> sumLambdaJob(dat->n, 0);
-//   std::vector<double> sumLambdaOrd(dat->m, 0);
+    // Sub gradient algorithm
+    Solution sol = assemble_heuristic(dat);
+    double lb = -INF;
 
-//   for (int k=0; k<dat->edges.size(); k++) {
-//     int i = dat->edges[k].i;
-//     int j = dat->edges[k].j;
+    while (pi > minPi) {
+        double sumGradSquared = 0;
 
-//     sumLambdaJob[j] += node->lagMult[k];
-//     sumLambdaOrd[i] += node->lagMult[k];
-//   }
+        // Getting lagragian lowerbound
+        solve_subproblem(dat, lambda, sol);
 
+        if (sol.lb > lb) {
+            lb = sol.lb;
+            it = 0;     
+        }
+        else {
+            it += 1;
 
-//   // copying sumPred
-//   std::vector<int> sumPred(dat->m);
-//   for (Order ord : dat->orders) {
-//     sumPred[ord.id] = ord.sumPred;
-//   }
+            if (it >= maxIt) {
+                pi *= 0.5;
 
-//   int t = 0;
+                if (pi < minPi) break;
+            }
+        }
 
-//   // Adding fixed terms
-//   std::vector<bool> ordersScheduled(dat->m, false);
-//   std::vector<bool> jobsScheduled(dat->n, false);
+        // Updating subgradient
+        for (int k=0; k<dat->edges.size(); k++) {
+            int i = dat->edges[k].i;
+            int j = dat->edges[k].j;
 
-//   for (int j : fixed) {
-//     sol.jogSeq.push_back(j);
-//     t += dat->jobs[j].p;
-//     sol.jobConc[j] = t;
-//     sol.lb += t * sumLambdaJob[j];
-//     jobsScheduled[j] = true;
+            subGrad[k] = sol.jobConc[j] - sol.ordConc[i];
+            sumGradSquared += std::pow(subGrad[k], 2);
+        }
 
-//     for (int i : dat->jobs[j].succ) {
-//       sumPred[i] -= dat->jobs[j].p;
+        double step = pi*(sol.ub - sol.lb)/sumGradSquared;
 
-//       if (sumPred[i] == 0) {
-//         sol.ordConc[i] = t;
-//         sol.lb += sol.ordConc[i] * (dat->orders[i].w - sumLambdaOrd[i])
-//         ordersScheduled[i] = true;
-//       }
-//     }
-//   }
+        for (int k=0; k<dat->edges.size(); k++) {
+            lambda[k] = std::max(0.0, lambda[k] + step*subGrad[k]);
+        }
+    }
 
-//   // Solving orders subproblem
-//   for (int i=0; i<dat->m; i++) {
-//     if (ordersScheduled[i]) continue;
-
-//     double weight = dat->orders[i].w - sumLambdaOrd[i];
-
-//     if (weight > 0) {
-//       sol.ordConc[i] = t + sumPred[i];
-//       sol.lb += sol.ordConc[i] * weight;
-//     }
-//     else {
-//       sol.ordConc[i] = endTime;
-//       sol.lb += sol.ordConc[i] * weight;
-//     }
-//   }
-
-//   // Solving jobs subproblem
-//   std::vector<double> priority;
-//   std::vector<int> idx;
-
-//   for (int j=0; j<dat->n; j++) {
-//     if (jobsScheduled[j]) continue;
-
-//     priority.push_back(dat->jobs[j].p / sumLambdaJob[j]);
-//     idx.push_back(j);
-//   }
-
-//   std::vector<int> sorted(idx.size());
-//   std::iota(sorted.begin(), sorted.end(), 0);
-//   std::sort(sorted.begin(), sorted.end(), [&](int a, int b){return priority[a] < priority[b]; });
-
-//   int t = 0;
-//   for (int count=0; count<idx.size(); count++) {
-//     int j = idx[sorted[count]];
-
-//     sol.jobSeq.push_back(j);
-//     t += dat->jobs[j].p;
-//     sol.jobConc[j] = t;
-//     sol.lb += t * sumLambdaJob[j];
-//   }
-
-//   return sol;
-// }
+    return lb;
+}
 
 
 // // ------------------------------- FUNCTIONS -------------------------------

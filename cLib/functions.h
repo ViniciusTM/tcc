@@ -7,14 +7,15 @@ Solution smith_naive (Instance*);
 
 Solution smith_naive_plus (Instance*);
 
-Solution smith_dinamic (Instance* dat);
+Solution smith_dinamic (Instance*);
 
-Solution priority_scheduling (Instance* dat);
+Solution priority_scheduling (Instance*);
 
-Solution assemble_heuristic (Instance* dat);
+Solution assemble_heuristic (Instance*);
 
 // Solution jobs_scheduling_heuristic(Instance*, std::vector<int>&);
 
-// Solution solve_subproblem(Node *node, Instance *dat);
+double lagrangean_relax(Instance*);
+
 
 // void schedule_orders(Solution&, Instance*);
