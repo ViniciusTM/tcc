@@ -1,16 +1,24 @@
 from pythonLib import Instance, Model, make_inst
+import time
+import os
 
-if __name__ == "__main__":
-    # ouput_file = open('results/MT.txt', 'w')
-    # ouput_file.write("G,N,M,I,Time,UB,LB,Gap\n")
+# if __name__ == "__main__":
+#     with open('results/LP.txt', 'w') as file:
+#         file.write("G N M I Time LB\n")
 
-    dat = Instance('instancias/CM/01-80-48-00')
-    model = Model(dat, model_type='ct', time_limit=180, relax=True)
-    model.solve()
-    print(model.lb)
-    # model.write_result(ouput_file)
-    # ouput_file.close()
-    
+#     paths = os.listdir("instancias/CM")
+#     paths.sort(key= lambda x: (int(x.split('-')[1]), int(x.split('-')[2]), int(x.split('-')[0]) ))
+
+#     for path in paths:
+#         path = os.path.join("instancias/CM/", path)
+
+#         with open('results/LP.txt', 'a') as file:
+#             dat = Instance(path)
+#             model = Model(dat, model_type='pv', time_limit=1200, relax=True)
+            
+#             model.solve()
+
+#             file.write("{:d} {:d} {:d} {:d} {:f} {:f}\n".format(dat.g, dat.n, dat.m, dat.i, model.elapsedTime, model.ub))    
 
 
 # if __name__ == "__main__":
