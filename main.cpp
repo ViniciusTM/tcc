@@ -6,8 +6,8 @@
 #include <iostream>
 #include <iomanip>
 #include <chrono> 
-#include "cLib/structures.h"
-#include "cLib/functions.h"
+#include "pottsLib/structures.h"
+// #include "PottsLib/functions.h"
 
 void get_names(const char *dir_name, std::vector<std::string> &inst_names) {
   DIR* dir = opendir(dir_name);
@@ -39,10 +39,10 @@ int main() {
     //     dat.read_file(name.c_str());
     //     file << dat.g << " " << dat.n << " " << dat.m << " " << dat.i << " ";       
 
-    //     auto start = std::chrono::high_resolution_clock::now();
-    //     double lb = lagrangean_relax(&dat);
-    //     auto finish = std::chrono::high_resolution_clock::now();
-    //     std::chrono::duration<double> elapsed = finish - start;
+        // auto start = std::chrono::high_resolution_clock::now();
+        // double lb = lagrangean_relax(&dat);
+        // auto finish = std::chrono::high_resolution_clock::now();
+        // std::chrono::duration<double> elapsed = finish - start;
 
     //     file <<  std::setprecision(15) << elapsed.count() << " " << lb << std::endl;               
     // }
@@ -50,20 +50,21 @@ int main() {
 
 
     // ------------------------ Testes heurísticas ------------------------//
-    std::vector<std::string> filePaths;
-    get_names("instancias/CM", filePaths);
+    std::vector<std::string> filePaths {"instancias/CM/01-20-20-01"};
+    //get_names("instancias/CM", filePaths);
 
     Instance dat;
 
-    std::ofstream file("results/UB.txt");
-    file << "G " << "N " << "M " << "I " << "UB" << std::endl;
+    // std::ofstream file("results/UB.txt");
+    // file << "G " << "N " << "M " << "I " << "UB" << std::endl;
     
     for (std::string name : filePaths) {
         dat.read_file(name.c_str());
 
-        Solution sol = assemble_heuristic(&dat);
-        file << dat.g << " " << dat.n << " " << dat.m << " " << dat.i << " " << std::setprecision(15) << sol.ub << std::endl;        
+
+        // Solution sol = assemble_heuristic(&dat);
+        // file << dat.g << " " << dat.n << " " << dat.m << " " << dat.i << " " << std::setprecision(15) << sol.ub << std::endl;        
     }
-    file.close();
+    // file.close();
 }
 

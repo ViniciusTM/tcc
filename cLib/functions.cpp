@@ -9,6 +9,7 @@
 #include <ctime>
 #include <random>
 #include "functions.h"
+#include "structures.h"
 
 // ------------------------ Global constants ------------------------ //
 
@@ -113,7 +114,6 @@ void solve_subproblem (Instance* dat, std::vector<double>& lambda, Solution& sol
     }
 }
 
-
 // ------------------------ heuristics ------------------------ //
 
 Solution smith_naive (Instance* dat) {
@@ -132,11 +132,6 @@ Solution smith_naive (Instance* dat) {
     sol.ordSeq.resize(dat->m);
 	std::iota(sol.ordSeq.begin(), sol.ordSeq.end(), 0);
 	std::sort(sol.ordSeq.begin(), sol.ordSeq.end(), comp);
-
-    // for (int i=0; i<dat->m; i++) {
-    //     std::cout << sol.ordSeq[i] << " ";
-    // }
-    // std::cout << std::endl;
 
     // schedulng J1 jobs
     std::vector<bool> scheduled(dat->n, false);
@@ -179,15 +174,12 @@ Solution smith_naive_plus (Instance* dat) {
 
     std::vector<bool> scheduled(dat->n, false);
     for (int i : sol.ordSeq) {
-        // std::cout << i << " -> ";
         for (int j : dat->orders[i].pred) {
             if (!scheduled[j]) {
-                // std::cout << j << " ";
                 sol.jobSeq.push_back(j);
                 scheduled[j] = true;
             }
         }
-        // std::cout << "END: " << t << std::endl;
     }
 
     schedule_orders(sol, dat);
@@ -427,6 +419,8 @@ double lagrangean_relax(Instance* dat) {
 
     return lb;
 }
+
+
 
 
 // // ------------------------------- FUNCTIONS -------------------------------

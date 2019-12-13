@@ -2,23 +2,23 @@ from pythonLib import Instance, Model, make_inst
 import time
 import os
 
-# if __name__ == "__main__":
-#     with open('results/LP.txt', 'w') as file:
-#         file.write("G N M I Time LB\n")
+if __name__ == "__main__":
+    with open('results/BH.txt', 'w') as file:
+        file.write("G N M I Time LB UB\n")
 
-#     paths = os.listdir("instancias/CM")
-#     paths.sort(key= lambda x: (int(x.split('-')[1]), int(x.split('-')[2]), int(x.split('-')[0]) ))
+    paths = os.listdir("instancias/CM")
+    paths.sort(key= lambda x: (int(x.split('-')[1]), int(x.split('-')[2]), int(x.split('-')[0]) ))
 
-#     for path in paths:
-#         path = os.path.join("instancias/CM/", path)
+    for path in paths:
+        path = os.path.join("instancias/CM/", path)
 
-#         with open('results/LP.txt', 'a') as file:
-#             dat = Instance(path)
-#             model = Model(dat, model_type='pv', time_limit=1200, relax=True)
+        with open('results/BH.txt', 'a') as file:
+            dat = Instance(path)
+            model = Model(dat, model_type='pv', time_limit=1200, relax=False)
             
-#             model.solve()
+            model.solve()
 
-#             file.write("{:d} {:d} {:d} {:d} {:f} {:f}\n".format(dat.g, dat.n, dat.m, dat.i, model.elapsedTime, model.ub))    
+            file.write("{:d} {:d} {:d} {:d} {:f} {:f}\n".format(dat.g, dat.n, dat.m, dat.i, model.elapsedTime, model.lb, model.ub))    
 
 
 # if __name__ == "__main__":
